@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:hive/hive.dart';
 import 'package:note_app/dummy_db.dart';
+import 'package:note_app/utils/app_sessions.dart';
 import 'package:note_app/utils/color_constants.dart';
 import 'package:note_app/view/notes_screen/widgets/note_card.dart';
 
@@ -15,6 +17,16 @@ class _NotesScreenState extends State<NotesScreen> {
   TextEditingController DescriptionController = TextEditingController();
   TextEditingController DateController = TextEditingController();
   int selectedcolorIndex = 0;
+  // STEP 2
+  var noteBox = Hive.box(AppSessions.NOTEBOX);
+  List noteKeys = [];
+  @override
+  void initState() {
+    noteKeys = noteBox.keys.toList();
+    setState(() {});
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -35,29 +47,35 @@ class _NotesScreenState extends State<NotesScreen> {
             )),
         body: ListView.separated(
             padding: EdgeInsets.all(15),
-            itemBuilder: (context, index) => NoteCard(
-                  noteColor: DummyDb
-                      .noteColors[DummyDb.notesList[index]["colorIndex"]],
-                  date: DummyDb.notesList[index]["date"],
-                  desc: DummyDb.notesList[index]["desc"],
-                  title: DummyDb.notesList[index]["title"],
-                  onDelete: () {
-                    DummyDb.notesList.removeAt(index);
-                    setState(() {});
-                  },
-                  isEdit: () {
-                    titleController.text = DummyDb.notesList[index]["date"];
-                    titleController.text = DummyDb.notesList[index]["desc"];
-                    titleController.text = DummyDb.notesList[index]["title"];
-                    selectedcolorIndex = DummyDb.notesList[index]["colorIndex"];
-                    //titleController = TextEditingController(text: DummyDb.notesList[index]["title"]);
-                    customBottomSheet(context, isEdit: true, itemIndex: index);
-                  },
-                ),
+            itemBuilder: (context, index) {
+              var currentNote = noteBox.get(noteKeys[index]);
+              return NoteCard(
+                noteColor: DummyDb
+                    .noteColors[noteBox.get(noteKeys[index])["colorIndex"]],
+                date: noteBox.get(noteKeys[index])["date"],
+                desc: noteBox.get(noteKeys[index])["desc"],
+                title: noteBox.get(noteKeys[index])["title"],
+                // for deletion
+                onDelete: () {
+                  noteBox.delete(noteKeys[index]);
+                  noteKeys = noteBox.keys.toList();
+                  setState(() {});
+                },
+                // for editing
+                isEdit: () {
+                  titleController.text = DummyDb.notesList[index]["date"];
+                  titleController.text = DummyDb.notesList[index]["desc"];
+                  titleController.text = DummyDb.notesList[index]["title"];
+                  selectedcolorIndex = DummyDb.notesList[index]["colorIndex"];
+                  //titleController = TextEditingController(text: DummyDb.notesList[index]["title"]);
+                  customBottomSheet(context, isEdit: true, itemIndex: index);
+                },
+              );
+            },
             separatorBuilder: (context, index) => SizedBox(
                   height: 10,
                 ),
-            itemCount: DummyDb.notesList.length),
+            itemCount: noteKeys.length),
       ),
     );
   }
@@ -168,14 +186,15 @@ class _NotesScreenState extends State<NotesScreen> {
                                   "date": DateController.text
                                 };
                               } else {
-                                DummyDb.notesList.add({
+                                //    STEP 3
+                                noteBox.add({
                                   "title": titleController.text,
                                   "desc": DescriptionController.text,
                                   "date": DateController.text,
                                   "colorIndex": selectedcolorIndex
                                 });
                               }
-
+                              noteKeys = noteBox.keys.toList();
                               Navigator.pop(context);
                               setState(() {});
                             },
