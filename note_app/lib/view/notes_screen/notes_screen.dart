@@ -52,9 +52,9 @@ class _NotesScreenState extends State<NotesScreen> {
               return NoteCard(
                 noteColor: DummyDb
                     .noteColors[noteBox.get(noteKeys[index])["colorIndex"]],
-                date: noteBox.get(noteKeys[index])["date"],
-                desc: noteBox.get(noteKeys[index])["desc"],
-                title: noteBox.get(noteKeys[index])["title"],
+                date: currentNote["date"],
+                desc: currentNote["desc"],
+                title: currentNote["title"],
                 // for deletion
                 onDelete: () {
                   noteBox.delete(noteKeys[index]);
@@ -63,10 +63,10 @@ class _NotesScreenState extends State<NotesScreen> {
                 },
                 // for editing
                 isEdit: () {
-                  titleController.text = DummyDb.notesList[index]["date"];
-                  titleController.text = DummyDb.notesList[index]["desc"];
-                  titleController.text = DummyDb.notesList[index]["title"];
-                  selectedcolorIndex = DummyDb.notesList[index]["colorIndex"];
+                  titleController.text = currentNote["date"];
+                  titleController.text = currentNote["desc"];
+                  titleController.text = currentNote["title"];
+                  selectedcolorIndex = currentNote["colorIndex"];
                   //titleController = TextEditingController(text: DummyDb.notesList[index]["title"]);
                   customBottomSheet(context, isEdit: true, itemIndex: index);
                 },
@@ -115,13 +115,17 @@ class _NotesScreenState extends State<NotesScreen> {
                     ),
                     SizedBox(height: 20),
                     TextFormField(
+                      readOnly: true,
                       controller: DateController,
                       decoration: InputDecoration(
                           hintText: "Date",
                           filled: true,
                           fillColor: Colors.grey.shade300,
                           border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(10))),
+                              borderRadius: BorderRadius.circular(10)),
+                          suffixIcon: IconButton(
+                              onPressed: () {},
+                              icon: Icon(Icons.calendar_month_outlined))),
                     ),
                     SizedBox(height: 20),
                     //Build color section
@@ -179,14 +183,20 @@ class _NotesScreenState extends State<NotesScreen> {
                           child: InkWell(
                             onTap: () {
                               if (isEdit == true) {
-                                DummyDb.notesList[itemIndex!] = {
+                                noteBox.put(noteKeys[itemIndex!], {
                                   "title": titleController.text,
                                   "desc": DescriptionController.text,
                                   "colorIndex": selectedcolorIndex,
                                   "date": DateController.text
-                                };
+                                });
+                                // DummyDb.notesList[itemIndex!] = {
+                                //   "title": titleController.text,
+                                //   "desc": DescriptionController.text,
+                                //   "colorIndex": selectedcolorIndex,
+                                //   "date": DateController.text
+                                // };
                               } else {
-                                //    STEP 3
+                                // To add new note storage
                                 noteBox.add({
                                   "title": titleController.text,
                                   "desc": DescriptionController.text,
@@ -194,6 +204,7 @@ class _NotesScreenState extends State<NotesScreen> {
                                   "colorIndex": selectedcolorIndex
                                 });
                               }
+                              // To update the keys list after adding a note
                               noteKeys = noteBox.keys.toList();
                               Navigator.pop(context);
                               setState(() {});
