@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:intl/intl.dart';
 import 'package:note_app/dummy_db.dart';
 import 'package:note_app/utils/app_sessions.dart';
 import 'package:note_app/utils/color_constants.dart';
@@ -124,7 +125,17 @@ class _NotesScreenState extends State<NotesScreen> {
                           border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(10)),
                           suffixIcon: IconButton(
-                              onPressed: () {},
+                              onPressed: () async {
+                                var selectedDate = await showDatePicker(
+                                  context: context,
+                                  firstDate: DateTime(2024),
+                                  lastDate: DateTime.now(),
+                                );
+                                if (selectedDate != null) {
+                                  DateController.text =
+                                      DateFormat("yMMMMd").format(selectedDate);
+                                }
+                              },
                               icon: Icon(Icons.calendar_month_outlined))),
                     ),
                     SizedBox(height: 20),
